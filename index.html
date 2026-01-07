@@ -7,102 +7,65 @@
     <style>
         body { 
             font-family: 'Segoe UI', Roboto, sans-serif; 
-            text-align: center; 
-            color: white; 
-            margin: 0; padding: 20px;
-            background: #0a0a0a;
-            overflow: hidden;
+            text-align: center; color: white; margin: 0; padding: 20px;
+            background: #0a0a0a; overflow: hidden;
         }
-        #lightningCanvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -1;
-            pointer-events: none;
-        }
+        #lightningCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
         .header { margin-top: 20px; position: relative; z-index: 1; }
         h1 { color: #f1c40f; text-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
         .multiplier { font-size: 42px; color: #2ecc71; font-weight: bold; }
-        .status-win { 
-            color: #f1c40f !important; 
-            font-size: 24px !important; 
-            font-weight: bold; 
-            text-shadow: 0 0 20px gold;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .grid { 
-            display: grid; gap: 12px; justify-content: center; 
-            margin: 30px auto; position: relative; z-index: 1; 
-        }
+        .status-win { color: #f1c40f !important; font-size: 24px !important; font-weight: bold; text-shadow: 0 0 20px gold; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .grid { display: grid; gap: 12px; justify-content: center; margin: 30px auto; position: relative; z-index: 1; }
         .cell { 
-            width: 80px; height: 80px; 
-            background: rgba(30, 30, 50, 0.9);
+            width: 80px; height: 80px; background: rgba(30, 30, 50, 0.9);
             display: flex; align-items: center; justify-content: center; 
             font-size: 32px; cursor: pointer; border-radius: 12px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            backdrop-filter: blur(5px);
-            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); transition: 0.2s;
         }
+        .cell.open { cursor: default; }
         .cell.safe { background: rgba(46, 204, 113, 0.8) !important; box-shadow: 0 0 15px #2ecc71; }
         .cell.bomb { background: rgba(231, 76, 60, 0.8) !important; box-shadow: 0 0 15px #e74c3c; }
         .controls { margin-top: 30px; position: relative; z-index: 1; min-height: 80px;}
-        .btn-end { 
-            display: none; padding: 15px 40px; font-size: 18px; font-weight: bold; 
-            text-decoration: none; border-radius: 50px; color: white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
+        .btn-end { display: none; padding: 15px 40px; font-size: 18px; font-weight: bold; text-decoration: none; border-radius: 50px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .btn-claim { background: linear-gradient(180deg, #f1c40f, #e67e22); color: black; }
         .btn-back { background: #34495e; }
-        #ticketOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex; align-items: center; justify-content: center; z-index: 9999;
-        }
+        #ticketOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .ticket-box { background: #1a1a1a; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; width: 280px; }
         .ticket-box input { width: 90%; padding: 10px; margin: 15px 0; border-radius: 5px; text-align: center; font-size: 16px; color: black; }
     </style>
 </head>
 <body>
 
-    <canvas id="lightningCanvas"></canvas>
+<canvas id="lightningCanvas"></canvas>
 
-    <div id="ticketOverlay">
-        <div class="ticket-box">
-            <h2>🎟️ KODE TIKET</h2>
-            <input type="text" id="ticketInput" placeholder="Ketik Kode Di Sini">
-            <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:12px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">MASUK GAME</button>
-            <p id="ticketError" style="color:#ff4d4d; display:none; margin-top:10px; font-size: 14px;"></p>
-        </div>
+<div id="ticketOverlay">
+    <div class="ticket-box">
+        <h2>🎟️ KODE TIKET</h2>
+        <input type="text" id="ticketInput" placeholder="Ketik Kode Di Sini">
+        <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:12px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">MASUK GAME</button>
+        <p id="ticketError" style="color:#ff4d4d; display:none; margin-top:10px; font-size: 14px;"></p>
     </div>
+</div>
 
-    <div class="header">
-        <h1>💎 SLOT BOMB 💣</h1>
-        <div class="multiplier" id="multiDisplay">x1.00</div>
-        <p id="status">Masukkan Tiket Untuk Mulai</p>
-    </div>
+<div class="header">
+    <h1>💎 SLOT BOMB 💣</h1>
+    <div class="multiplier" id="multiDisplay">x1.00</div>
+    <p id="status">Masukkan Tiket Untuk Mulai</p>
+</div>
 
-    <div class="grid" id="grid"></div>
+<div class="grid" id="grid"></div>
 
-    <div class="controls">
-        <a href="https://t.me/Link_Klaim" id="btnWin" class="btn-end btn-claim">KLAIM HADIAH</a>
-        <a href="https://t.me/Link_Kembali" id="btnLose" class="btn-end btn-back">KEMBALI</a>
-        <p onclick="location.reload()" style="cursor:pointer; font-size:11px; margin-top:30px; color:#555;">Reset Sesi</p>
-    </div>
+<div class="controls">
+    <a href="https://t.me/Link_Klaim" id="btnWin" class="btn-end btn-claim">KLAIM HADIAH</a>
+    <a href="https://t.me/Link_Kembali" id="btnLose" class="btn-end btn-back">KEMBALI</a>
+    <p onclick="location.reload()" style="cursor:pointer; font-size:11px; margin-top:30px; color:#555;">Reset Sesi</p>
+</div>
 
-    <script>
-    // --- SATU KONFIGURASI SAJA ---
+<script>
     const CONFIG = {
-        cols: 3, 
-        rows: 3, 
-        bombs: 1, 
-        profitRate: 1.25,
-        // PASTIKAN URL INI ADALAH URL "WEB APP" YANG SUDAH DI-DEPLOY
-        scriptUrl: "https://script.google.com/macros/s/AKfycbwiLwQV65ZzV1VWXF1x0TEsRCmhjOzUJ39317l5JwYD2Zy-CBdeU2pta3gNhG6Xcuc0Dg/exec", 
+        cols: 3, rows: 3, bombs: 1, profitRate: 1.25,
+        scriptUrl: "https://script.google.com/macros/s/AKfycbwdB7mcknurYJzG1sBjk2NZoAru4Mo665T9LD9W3YDavDbuAj4susScxZfm0Q6b2r4z/exec", 
         sheetNameTarget: "KODE TIKET 6" 
     };
 
@@ -148,57 +111,61 @@
     }
     animate();
 
-    // --- 2. LOGIKA TIKET ---
-    async function verifyTicket() {
-    const input = document.getElementById('ticketInput').value.trim();
-    const errorEl = document.getElementById('ticketError');
-    const btnLogin = document.getElementById("btnVerify");
-
-    if (!input) return;
-
-    btnLogin.innerText = "MENGECEK...";
-    btnLogin.disabled = true;
-
-    try {
-        // Langkah tambahan: Ambil IP User
-        let userIp = "Hidden";
-        try {
-            const ipRes = await fetch('https://api.ipify.org?format=json');
-            const ipData = await ipRes.json();
-            userIp = ipData.ip;
-        } catch (e) { console.log("Gagal ambil IP"); }
-
-        // Kirim tiket + Nama Sheet + IP ke Google Script
-        const finalUrl = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(input)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&ip=${encodeURIComponent(userIp)}`;
-        
-        const response = await fetch(finalUrl);
-        const result = await response.text();
-
-        if (result.trim() === "VALID") {
-            document.getElementById('ticketOverlay').style.display = 'none';
-            initGame();
-        } else if (result.trim() === "USED") {
-            errorEl.innerText = "MAAF, TIKET SUDAH PERNAH DIGUNAKAN!";
-            errorEl.style.display = 'block';
-        } else {
-            errorEl.innerText = "KODE TIKET SALAH / TIDAK ADA!";
-            errorEl.style.display = 'block';
-        }
-    } catch (e) {
-        errorEl.innerText = "KONEKSI BERMASALAH!";
-        errorEl.style.display = 'block';
-    } finally {
-        btnLogin.innerText = "MASUK GAME";
-        btnLogin.disabled = false;
-    }
-}
-
-    // --- 3. LOGIKA GAME ---
+    // --- 2. LOGIKA TIKET & DATA ---
+    let currentTicket = "";
     let bombPositions = [];
     let isGameOver = false;
     let scoreMulti = 1.0;
     let revealedCount = 0;
 
+    async function getIp() {
+        try {
+            const res = await fetch('https://api.ipify.org?format=json');
+            const data = await res.json();
+            return data.ip;
+        } catch (e) { return "IP Hidden"; }
+    }
+
+    async function verifyTicket() {
+        const input = document.getElementById('ticketInput').value.trim();
+        const errorEl = document.getElementById('ticketError');
+        const btn = document.getElementById('btnVerify');
+        if (!input) return;
+
+        btn.disabled = true;
+        btn.innerText = "MENGECEK...";
+        currentTicket = input;
+        const userIp = await getIp();
+
+        try {
+            const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(input)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&action=verify&ip=${userIp}`;
+            const response = await fetch(url);
+            const result = await response.text();
+
+            if (result.trim() === "VALID") {
+                document.getElementById('ticketOverlay').style.display = 'none';
+                initGame();
+            } else {
+                errorEl.innerText = result === "USED" ? "TIKET SUDAH DIPAKAI!" : "TIKET TIDAK VALID!";
+                errorEl.style.display = 'block';
+                btn.disabled = false;
+                btn.innerText = "MASUK GAME";
+            }
+        } catch (e) { 
+            errorEl.innerText = "KONEKSI GAGAL!"; 
+            errorEl.style.display = 'block';
+            btn.disabled = false;
+        }
+    }
+
+    async function updateGameResult(status) {
+        const userIp = await getIp();
+        const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(currentTicket)}&action=${status}&ip=${userIp}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}`;
+        // Menggunakan fetch dengan keepalive agar data tetap terkirim meski tab ditutup
+        await fetch(url, { mode: 'no-cors', keepalive: true });
+    }
+
+    // --- 3. LOGIKA GAME ---
     function initGame() {
         const gridEl = document.getElementById('grid');
         const total = CONFIG.cols * CONFIG.rows;
@@ -226,9 +193,10 @@
         }
     }
 
-    function handleTap(idx, el) {
-        if (isGameOver || el.classList.contains('safe') || el.classList.contains('bomb')) return;
-        
+    async function handleTap(idx, el) {
+        if (isGameOver || el.classList.contains('open')) return;
+        el.classList.add('open');
+
         if (bombPositions.includes(idx)) {
             isGameOver = true;
             el.innerText = '💣';
@@ -236,10 +204,11 @@
             document.getElementById('status').innerText = "BOOM! Anda Gagal.";
             document.getElementById('btnLose').style.display = 'inline-block';
             revealAll();
+            await updateGameResult("lose");
         } else {
             revealedCount++;
             scoreMulti = Math.pow(CONFIG.profitRate, revealedCount);
-            el.innerText = '🎰';
+            el.innerText = '💎';
             el.classList.add('safe');
             document.getElementById('multiDisplay').innerText = `x${scoreMulti.toFixed(2)}`;
             
@@ -249,6 +218,7 @@
                 document.getElementById('status').innerText = "KAMU MENANG!";
                 document.getElementById('status').classList.add('status-win');
                 document.getElementById('btnWin').style.display = 'inline-block';
+                await updateGameResult("win");
             } else {
                 document.getElementById('status').innerText = "Cari Diamond Berikutnya...";
             }
@@ -258,7 +228,7 @@
     function revealAll() {
         const cells = document.querySelectorAll('.cell');
         bombPositions.forEach(p => {
-            cells[p].innerText = '☠️';
+            cells[p].innerText = '💣';
             cells[p].classList.add('bomb');
         });
     }
