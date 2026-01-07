@@ -3,199 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slot Bomb Tactics - Ticket System</title>
+    <title>Slot Bomb Tactics - Telegram Ticket</title>
     <style>
-        /* TAMPILAN UTAMA */
         body { 
             font-family: 'Segoe UI', Roboto, sans-serif; 
             text-align: center; 
             background: #0f0f1b; 
             color: white; 
-            margin: 0; 
-            padding: 20px;
-            overflow-x: hidden;
+            margin: 0; padding: 20px;
         }
 
+        /* HEADER & MULTIPLIER */
         .header { margin-bottom: 20px; }
-        h1 { color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); margin-bottom: 5px; }
-        
-        .multiplier { 
-            font-size: 32px; 
-            color: #2ecc71; 
-            font-weight: bold; 
-            margin: 10px 0; 
-            text-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
-        }
+        h1 { color: #f1c40f; margin-bottom: 5px; }
+        .multiplier { font-size: 32px; color: #2ecc71; font-weight: bold; margin: 10px 0; }
+        #status { color: #bdc3c7; height: 20px; }
 
-        /* GRID PERMAINAN */
-        .grid { 
-            display: grid; 
-            gap: 8px; 
-            justify-content: center; 
-            margin: 25px auto; 
-        }
-
+        /* GRID */
+        .grid { display: grid; gap: 8px; justify-content: center; margin: 25px auto; }
         .cell { 
-            width: 60px; height: 60px; 
-            background: linear-gradient(145deg, #23233a, #1a1a2e); 
+            width: 60px; height: 60px; background: #23233a; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; cursor: pointer; border-radius: 10px;
-            border: 1px solid #34495e;
-            transition: all 0.2s ease;
+            font-size: 24px; cursor: pointer; border-radius: 10px; border: 1px solid #34495e;
+            transition: 0.2s;
         }
-        
-        .cell.open { cursor: default; transform: scale(0.95); }
-        .cell.safe { background: radial-gradient(circle, #2ecc71, #27ae60) !important; border-color: #2ecc71; }
-        .cell.bomb { background: radial-gradient(circle, #ff4d4d, #b33939) !important; border-color: #ff6b6b; }
+        .cell.open { cursor: default; }
+        .cell.safe { background: #2ecc71 !important; border-color: #27ae60; }
+        .cell.bomb { background: #ff4d4d !important; border-color: #b33939; }
 
         /* OVERLAY TIKET */
         #ticketOverlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 20, 0.95);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 20, 0.98);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
         }
+        .ticket-box { background: #1a1a2e; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; width: 80%; max-width: 300px; }
+        .ticket-box input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #34495e; background: #0f0f1b; color: #f1c40f; font-size: 18px; text-align: center; box-sizing: border-box; }
 
-        .ticket-box {
-            background: #1a1a2e;
-            padding: 40px 20px;
-            border-radius: 20px;
-            border: 2px solid #f1c40f;
-            width: 85%;
-            max-width: 350px;
-            box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
-        }
-
-        .ticket-box input {
-            width: 100%; padding: 15px; margin: 20px 0;
-            border-radius: 10px; border: 1px solid #34495e;
-            background: #0f0f1b; color: #f1c40f;
-            font-size: 20px; font-weight: bold; text-align: center;
-            box-sizing: border-box; outline: none;
-        }
-
-        /* TOMBOL-TOMBOL */
-        .btn-action {
-            display: inline-block;
-            padding: 15px 35px;
-            font-size: 18px;
-            font-weight: bold;
-            text-decoration: none;
-            color: #000;
-            background: #f1c40f;
-            border-radius: 50px;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-link-finish {
-            display: none; /* Muncul saat kalah/menang */
-            margin-top: 20px;
-            background: linear-gradient(180deg, #e67e22, #d35400);
-            color: white;
+        /* TOMBOL AKHIR */
+        .controls { margin-top: 30px; min-height: 80px; }
+        .btn-end { 
+            display: none; padding: 15px 35px; font-size: 18px; font-weight: bold; 
+            text-decoration: none; border-radius: 50px; color: white; transition: 0.3s;
             animation: pulse 1.5s infinite;
         }
+        .btn-claim { background: linear-gradient(180deg, #f1c40f, #e67e22); box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4); }
+        .btn-back { background: linear-gradient(180deg, #7f8c8d, #34495e); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .reset-text {
-            display: block; margin-top: 25px; color: #7f8c8d;
-            cursor: pointer; font-size: 14px; text-decoration: underline;
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .reset-text { display: block; margin-top: 20px; color: #555; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div id="ticketOverlay">
         <div class="ticket-box">
-            <h1>🎟️ TICKET</h1>
-            <p style="color: #bdc3c7;">Masukkan kode akses untuk bermain</p>
-            <input type="text" id="ticketInput" placeholder="KODE TIKET">
-            <button class="btn-action" onclick="verifyTicket()">VERIFIKASI</button>
-            <p id="ticketError" style="color: #ff4d4d; margin-top: 15px; display: none;">Kode Tiket Tidak Valid!</p>
+            <h2>🎟️ AKSES TIKET</h2>
+            <input type="text" id="ticketInput" placeholder="MASUKKAN KODE">
+            <button onclick="verifyTicket()" style="width:100%; padding:12px; background:#f1c40f; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">MULAI MAIN</button>
+            <p id="ticketError" style="color:#ff4d4d; display:none; font-size:12px; margin-top:10px;">Tiket Salah!</p>
         </div>
     </div>
 
     <div class="header">
-        <h1>💎 BOMB TACTICS 💣</h1>
+        <h1>💎 SLOT BOMB 💣</h1>
         <div class="multiplier" id="multiDisplay">x1.00</div>
-        <p id="status">Pilih kotak dan kumpulkan Diamond!</p>
+        <p id="status">Cari Diamond untuk Klaim Hadiah!</p>
     </div>
 
     <div class="grid" id="grid"></div>
 
     <div class="controls">
-        <a href="https://t.me/saranggenz" id="finishBtn" class="btn-action btn-link-finish">KLAIM HADIAH</a>
-        <span class="reset-text" onclick="location.reload()">Input Tiket Baru</span>
+        <a href="https://t.me/saranggenz" id="btnWin" class="btn-end btn-claim">KLAIM HADIAH</a>
+        
+        <a href="https://t.me/RuangTemukuu" id="btnLose" class="btn-end btn-back">KEMBALI</a>
+
+        <span class="reset-text" onclick="location.reload()">Reset Sesi Tiket</span>
     </div>
 
     <script>
-        // ==========================================
-        // 1. PENGATURAN (Sesuai Kebutuhan Anda)
-        // ==========================================
+        // --- KONFIGURASI ---
         const CONFIG = {
-            cols: 3,               // Kolom ke samping
-            rows: 3,               // Baris ke bawah
-            bombs: 1,              // Jumlah bom tersembunyi
-            safeIcon: '🎰',        // Simbol Slot Menang
-            bombIcon: '☠️',        // Simbol Bom
-            profitRate: 1.20,      // Kenaikan Multiplier (1.20 = +20% per klik)
-            validTickets: ["VIP77", "MAIN123", "TICKET01"] // Daftar Tiket Anda
+            cols: 3, 
+            rows: 3, 
+            bombs: 1, 
+            validTickets: ["VIP77", "GOLD99"],
+            profitRate: 1.25
         };
 
-        // ==========================================
-        // 2. LOGIKA SISTEM TIKET
-        // ==========================================
-        function verifyTicket() {
-            const input = document.getElementById('ticketInput').value.trim().toUpperCase();
-            const error = document.getElementById('ticketError');
-            const overlay = document.getElementById('ticketOverlay');
-
-            if (CONFIG.validTickets.includes(input)) {
-                overlay.style.display = 'none'; // Buka akses game
-                initGame();
-            } else {
-                error.style.display = 'block';
-                document.getElementById('ticketInput').value = '';
-            }
-        }
-
-        // ==========================================
-        // 3. LOGIKA INTI PERMAINAN
-        // ==========================================
         let bombPositions = [];
         let isGameOver = false;
         let scoreMulti = 1.0;
         let revealedCount = 0;
 
+        // VERIFIKASI TIKET
+        function verifyTicket() {
+            const input = document.getElementById('ticketInput').value.trim().toUpperCase();
+            if (CONFIG.validTickets.includes(input)) {
+                document.getElementById('ticketOverlay').style.display = 'none';
+                initGame();
+            } else {
+                document.getElementById('ticketError').style.display = 'block';
+            }
+        }
+
+        // INIT GAME
         function initGame() {
             const gridEl = document.getElementById('grid');
-            const totalCells = CONFIG.cols * CONFIG.rows;
-            
-            // Reset state
+            const total = CONFIG.cols * CONFIG.rows;
             bombPositions = [];
             isGameOver = false;
             scoreMulti = 1.0;
             revealedCount = 0;
 
-            // Atur Grid
             gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 60px)`;
             gridEl.innerHTML = '';
 
-            // Tanam Bom
             while(bombPositions.length < CONFIG.bombs) {
-                let r = Math.floor(Math.random() * totalCells);
+                let r = Math.floor(Math.random() * total);
                 if(!bombPositions.includes(r)) bombPositions.push(r);
             }
 
-            // Buat Kotak
-            for (let i = 0; i < totalCells; i++) {
+            for (let i = 0; i < total; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
                 cell.onclick = () => handleTap(i, cell);
@@ -203,55 +132,44 @@
             }
         }
 
+        // LOGIKA KLIK
         function handleTap(idx, el) {
             if (isGameOver || el.classList.contains('open')) return;
-
             el.classList.add('open');
             
             if (bombPositions.includes(idx)) {
-                endGame(false, el);
-            } else {
-                revealedCount++;
-                scoreMulti = Math.pow(CONFIG.profitRate, revealedCount);
-                el.innerText = CONFIG.safeIcon;
-                el.classList.add('safe');
-                updateUI();
-                
-                // Cek jika menang semua
-                if (revealedCount === (CONFIG.cols * CONFIG.rows) - CONFIG.bombs) {
-                    endGame(true, el);
-                }
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('multiDisplay').innerText = `x${scoreMulti.toFixed(2)}`;
-            document.getElementById('status').innerText = "Mantap! Lanjutkan?";
-        }
-
-        function endGame(isWin, lastEl) {
-            isGameOver = true;
-            document.getElementById('finishBtn').style.display = 'inline-block';
-
-            if (!isWin) {
-                lastEl.innerText = CONFIG.bombIcon;
-                lastEl.classList.add('bomb');
-                document.getElementById('status').innerText = "BOOM! Game Over.";
+                // HASIL: GAGAL (Tampilkan tombol KEMBALI)
+                isGameOver = true;
+                el.innerText = '💣';
+                el.classList.add('bomb');
+                document.getElementById('status').innerText = "BOOM! Anda Gagal.";
+                document.getElementById('btnLose').style.display = 'inline-block';
                 revealAll();
             } else {
-                document.getElementById('status').innerText = "JACKPOT! Diamond Ditemukan.";
+                // HASIL: BERHASIL (Tampilkan tombol KLAIM)
+                revealedCount++;
+                scoreMulti = Math.pow(CONFIG.profitRate, revealedCount);
+                el.innerText = '💎';
+                el.classList.add('safe');
+                document.getElementById('multiDisplay').innerText = `x${scoreMulti.toFixed(2)}`;
+                document.getElementById('status').innerText = "Berhasil! Tekan Klaim atau Lanjut.";
+                
+                // Munculkan tombol Klaim setiap kali berhasil menebak 
+                // (Pemain bisa berhenti kapan saja untuk klaim)
+                document.getElementById('btnWin').style.display = 'inline-block';
+                document.getElementById('btnLose').style.display = 'none';
             }
         }
 
         function revealAll() {
             const cells = document.querySelectorAll('.cell');
             bombPositions.forEach(p => {
-                cells[p].innerText = CONFIG.bombIcon;
+                cells[p].innerText = '💣';
                 cells[p].classList.add('bomb');
             });
+            // Sembunyikan tombol klaim jika ada karena sudah kalah
+            document.getElementById('btnWin').style.display = 'none';
         }
     </script>
 </body>
 </html>
-
-
