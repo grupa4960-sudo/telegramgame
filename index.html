@@ -81,7 +81,7 @@
     </div>
 
     <div class="header">
-        <h1>🎰 SLOT BOMB ☠️</h1>
+        <h1>💎 SLOT BOMB 💣</h1>
         <div class="multiplier" id="multiDisplay">x1.00</div>
         <p id="status">Masukkan Tiket Untuk Mulai</p>
     </div>
@@ -102,8 +102,8 @@
         bombs: 1, 
         profitRate: 1.25,
         // PASTIKAN URL INI ADALAH URL "WEB APP" YANG SUDAH DI-DEPLOY
-        scriptUrl: "https://script.google.com/macros/s/AKfycbwd-YfdHJyudFediVjq_WqauPWalv_l_nXjWYDnSrihc38uABgR9iEBKdj93M4zOpXXVw/exec", 
-        sheetNameTarget: "kode tiket" 
+        scriptUrl: "https://script.google.com/macros/s/AKfycbxqSKdXO7eq_At58xZHOO5ZGjmPx3vzFfTyy0dl97S_GIQLHEBE1S1QN_SOMRmwfgWA/exec", 
+        sheetNameTarget: "KODE TIKET 6" 
     };
 
     // --- 1. ANIMASI PETIR ---
@@ -150,43 +150,48 @@
 
     // --- 2. LOGIKA TIKET ---
     async function verifyTicket() {
-        const input = document.getElementById('ticketInput').value.trim();
-        const errorEl = document.getElementById('ticketError');
-        const btnLogin = document.getElementById("btnVerify");
+    const input = document.getElementById('ticketInput').value.trim();
+    const errorEl = document.getElementById('ticketError');
+    const btnLogin = document.getElementById("btnVerify");
 
-        if (!input) {
-            errorEl.innerText = "Masukkan kode tiket!";
-            errorEl.style.display = 'block';
-            return;
-        }
+    if (!input) return;
 
-        btnLogin.innerText = "MENGECEK...";
-        btnLogin.disabled = true;
-        errorEl.style.display = 'none';
+    btnLogin.innerText = "MENGECEK...";
+    btnLogin.disabled = true;
 
+    try {
+        // Langkah tambahan: Ambil IP User
+        let userIp = "Hidden";
         try {
-            const finalUrl = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(input)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}`;
-            
-            // Menggunakan mode no-cors jika perlu, tapi idealnya Apps Script harus mengembalikan response yang benar
-            const response = await fetch(finalUrl);
-            const result = await response.text();
+            const ipRes = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipRes.json();
+            userIp = ipData.ip;
+        } catch (e) { console.log("Gagal ambil IP"); }
 
-            if (result.trim() === "VALID") {
-                document.getElementById('ticketOverlay').style.display = 'none';
-                initGame();
-            } else {
-                errorEl.innerText = result.includes("ERROR") ? result : "Tiket Salah atau Sudah Digunakan!";
-                errorEl.style.display = 'block';
-            }
-        } catch (e) {
-            console.error(e);
-            errorEl.innerText = "Gagal terhubung ke server!";
+        // Kirim tiket + Nama Sheet + IP ke Google Script
+        const finalUrl = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(input)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&ip=${encodeURIComponent(userIp)}`;
+        
+        const response = await fetch(finalUrl);
+        const result = await response.text();
+
+        if (result.trim() === "VALID") {
+            document.getElementById('ticketOverlay').style.display = 'none';
+            initGame();
+        } else if (result.trim() === "USED") {
+            errorEl.innerText = "MAAF, TIKET SUDAH PERNAH DIGUNAKAN!";
             errorEl.style.display = 'block';
-        } finally {
-            btnLogin.innerText = "MASUK GAME";
-            btnLogin.disabled = false;
+        } else {
+            errorEl.innerText = "KODE TIKET SALAH / TIDAK ADA!";
+            errorEl.style.display = 'block';
         }
+    } catch (e) {
+        errorEl.innerText = "KONEKSI BERMASALAH!";
+        errorEl.style.display = 'block';
+    } finally {
+        btnLogin.innerText = "MASUK GAME";
+        btnLogin.disabled = false;
     }
+}
 
     // --- 3. LOGIKA GAME ---
     let bombPositions = [];
@@ -226,7 +231,7 @@
         
         if (bombPositions.includes(idx)) {
             isGameOver = true;
-            el.innerText = '☠️';
+            el.innerText = '💣';
             el.classList.add('bomb');
             document.getElementById('status').innerText = "BOOM! Anda Gagal.";
             document.getElementById('btnLose').style.display = 'inline-block';
@@ -260,4 +265,3 @@
 </script>
 </body>
 </html>
-
