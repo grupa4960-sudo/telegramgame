@@ -59,7 +59,7 @@
 </div>
 
 <div class="header">
-    <h1>💎 SLOT BOMB 💣</h1>
+    <h1>🐉 SLOT BOMB 💣</h1>
     <div class="multiplier" id="multiDisplay">x1.00</div>
     <p id="status">Cari Diamond!</p>
 </div>
@@ -172,7 +172,7 @@
         } else {
             revealedCount++;
             let multi = Math.pow(CONFIG.profitRate, revealedCount);
-            el.innerText = '💎'; el.classList.add('safe');
+            el.innerText = '🐉'; el.classList.add('safe');
             document.getElementById('multiDisplay').innerText = `x${multi.toFixed(2)}`;
             
             const totalSafe = (CONFIG.cols * CONFIG.rows) - CONFIG.bombsCount;
@@ -234,3 +234,4 @@
 </script>
 </body>
 </html>
+
