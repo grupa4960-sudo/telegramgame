@@ -23,6 +23,12 @@
             display: flex; align-items: center; justify-content: center; 
             font-size: 30px; cursor: pointer; border-radius: 12px; 
             border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); transition: 0.2s;
+            position: relative;
+        }
+        /* Menampilkan nomor kecil di pojok sebagai panduan admin */
+        .cell::after {
+            content: attr(data-index);
+            position: absolute; top: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2);
         }
         .cell.open { cursor: default; }
         .cell.safe { background: rgba(46, 204, 113, 0.8) !important; box-shadow: 0 0 15px #2ecc71; }
@@ -35,8 +41,7 @@
 
         #ticketOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .ticket-box { background: #1a1a1a; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; width: 280px; box-shadow: 0 0 30px rgba(241, 196, 15, 0.2); }
-        .ticket-box h2 { margin-top: 0; font-size: 20px; }
-        .ticket-box input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 8px; text-align: center; font-size: 16px; border: 1px solid #333; }
+        .ticket-box input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 8px; text-align: center; font-size: 16px; border: 1px solid #333; background: white; color: black; }
     </style>
 </head>
 <body>
@@ -45,10 +50,10 @@
 
 <div id="ticketOverlay">
     <div class="ticket-box">
-        <h2>🎟️ MASUKKAN DATA</h2>
-        <input type="text" id="userNameInput" placeholder="Nama Anda">
-        <input type="text" id="ticketInput" placeholder="Kode Tiket">
-        <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:14px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-top:10px;">MULAI BERMAIN</button>
+        <h2 style="color: #f1c40f;">🎟️ LOGIN PLAYER</h2>
+        <input type="text" id="userNameInput" placeholder="Masukkan Nama">
+        <input type="text" id="ticketInput" placeholder="Masukkan Kode Tiket">
+        <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:14px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-top:10px; color: black;">MULAI MAIN</button>
         <p id="ticketError" style="color:#ff4d4d; display:none; margin-top:12px; font-size: 14px; font-weight: bold;"></p>
     </div>
 </div>
@@ -56,7 +61,7 @@
 <div class="header">
     <h1>💎 SLOT BOMB 💣</h1>
     <div class="multiplier" id="multiDisplay">x1.00</div>
-    <p id="status">Lengkapi data untuk memulai</p>
+    <p id="status">Cari Diamond!</p>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -69,19 +74,14 @@
 
 <script>
     const CONFIG = {
-        cols: 3, rows: 3, bombs: 1, profitRate: 1.25,
-        scriptUrl: "https://script.google.com/macros/s/AKfycbx6xRZ0u121y7r5V9gmFt5UaAEZXh3NfgpKN_nsKefzdfqI_4ABbaBKsI5W-lHzyXJQEQ/exec", 
+        cols: 3, rows: 3, bombsCount: 1, profitRate: 1.25,
+        // MASUKKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI
+        scriptUrl: "https://script.google.com/macros/s/AKfycbzncmHnLw90icjI2_wuUqIqbhomnC9oIQAILbjOPIq03HfbNnuNNde8JEtcYg5Z0WvAgw/exec", 
         sheetNameTarget: "KODE TIKET 6" 
     };
 
-    let currentTicket = "";
-    let currentName = "";
-    let bombPositions = [];
-    let isGameOver = false;
-    let scoreMulti = 1.0;
-    let revealedCount = 0;
+    let currentTicket = "", currentName = "", bombPositions = [], isGameOver = false, revealedCount = 0;
 
-    // --- UTILS ---
     async function getIp() {
         try {
             const res = await fetch('https://api.ipify.org?format=json');
@@ -90,7 +90,6 @@
         } catch (e) { return "IP Hidden"; }
     }
 
-    // --- LOGIKA TIKET ---
     async function verifyTicket() {
         const nameIn = document.getElementById('userNameInput').value.trim();
         const ticketIn = document.getElementById('ticketInput').value.trim();
@@ -98,60 +97,54 @@
         const btn = document.getElementById('btnVerify');
 
         if (!nameIn || !ticketIn) {
-            errorEl.innerText = "Isi NAMA dan TIKET!";
+            errorEl.innerText = "Data tidak lengkap!";
             errorEl.style.display = 'block';
             return;
         }
 
-        btn.disabled = true;
-        btn.innerText = "VERIFIKASI...";
-        currentTicket = ticketIn;
-        currentName = nameIn;
+        btn.disabled = true; btn.innerText = "MENGECEK...";
+        currentTicket = ticketIn; currentName = nameIn;
         const userIp = await getIp();
 
         try {
             const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(ticketIn)}&userName=${encodeURIComponent(nameIn)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&action=verify&ip=${userIp}`;
-            const response = await fetch(url);
-            const result = await response.text();
+            const res = await fetch(url);
+            const result = await res.text();
 
             if (result.trim() === "VALID") {
                 document.getElementById('ticketOverlay').style.display = 'none';
                 initGame();
             } else {
-                errorEl.innerText = result === "USED" ? "TIKET SUDAH PERNAH DIPAKAI!" : "TIKET TIDAK VALID!";
+                errorEl.innerText = result === "USED" ? "TIKET SUDAH DIGUNAKAN!" : "TIKET TIDAK TERDAFTAR!";
                 errorEl.style.display = 'block';
-                btn.disabled = false;
-                btn.innerText = "MULAI BERMAIN";
+                btn.disabled = false; btn.innerText = "MULAI MAIN";
             }
         } catch (e) { 
-            errorEl.innerText = "KONEKSI SERVER GAGAL!"; 
-            errorEl.style.display = 'block';
+            errorEl.innerText = "ERROR KONEKSI!"; errorEl.style.display = 'block';
             btn.disabled = false;
         }
     }
 
     async function updateGameResult(status) {
         const userIp = await getIp();
-        const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(currentTicket)}&userName=${encodeURIComponent(currentName)}&action=${status}&ip=${userIp}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}`;
-        // Menggunakan keepalive agar data tetap terkirim meskipun browser ditutup mendadak
-        await fetch(url, { mode: 'no-cors', keepalive: true });
+        // Logika Lokasi Bom (1-9) sesuai permintaan
+        const bombLocs = bombPositions.map(p => p + 1).join(", ");
+        const reportLabel = `kolom nomor ${bombLocs}`;
+        
+        const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(currentTicket)}&userName=${encodeURIComponent(currentName)}&action=${status}&ip=${userIp}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&bombs=${encodeURIComponent(reportLabel)}`;
+        
+        fetch(url, { mode: 'no-cors', keepalive: true });
     }
 
-    // --- LOGIKA GAME ---
     function initGame() {
         const gridEl = document.getElementById('grid');
         const total = CONFIG.cols * CONFIG.rows;
-        bombPositions = []; isGameOver = false; scoreMulti = 1.0; revealedCount = 0;
-
-        document.getElementById('status').innerText = "Cari Diamond!";
-        document.getElementById('multiDisplay').innerText = "x1.00";
-        document.getElementById('btnWin').style.display = 'none';
-        document.getElementById('btnLose').style.display = 'none';
+        bombPositions = []; isGameOver = false; revealedCount = 0;
         
         gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 75px)`;
         gridEl.innerHTML = '';
 
-        while(bombPositions.length < CONFIG.bombs) {
+        while(bombPositions.length < CONFIG.bombsCount) {
             let r = Math.floor(Math.random() * total);
             if(!bombPositions.includes(r)) bombPositions.push(r);
         }
@@ -159,6 +152,7 @@
         for (let i = 0; i < total; i++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
+            cell.setAttribute('data-index', i + 1); // Penomoran 1-9
             cell.onclick = () => handleTap(i, cell);
             gridEl.appendChild(cell);
         }
@@ -170,28 +164,24 @@
 
         if (bombPositions.includes(idx)) {
             isGameOver = true;
-            el.innerText = '💣';
-            el.classList.add('bomb');
-            document.getElementById('status').innerText = "BOOM! GAME OVER";
+            el.innerText = '💣'; el.classList.add('bomb');
+            document.getElementById('status').innerText = "BOOM! ANDA KALAH";
             document.getElementById('btnLose').style.display = 'inline-block';
             revealAll();
             await updateGameResult("lose");
         } else {
             revealedCount++;
-            scoreMulti = Math.pow(CONFIG.profitRate, revealedCount);
-            el.innerText = '💎';
-            el.classList.add('safe');
-            document.getElementById('multiDisplay').innerText = `x${scoreMulti.toFixed(2)}`;
+            let multi = Math.pow(CONFIG.profitRate, revealedCount);
+            el.innerText = '💎'; el.classList.add('safe');
+            document.getElementById('multiDisplay').innerText = `x${multi.toFixed(2)}`;
             
-            const totalSafe = (CONFIG.cols * CONFIG.rows) - CONFIG.bombs;
+            const totalSafe = (CONFIG.cols * CONFIG.rows) - CONFIG.bombsCount;
             if (revealedCount === totalSafe) {
                 isGameOver = true;
                 document.getElementById('status').innerText = "YOU WIN!";
                 document.getElementById('status').classList.add('status-win');
                 document.getElementById('btnWin').style.display = 'inline-block';
                 await updateGameResult("win");
-            } else {
-                document.getElementById('status').innerText = "Mantap! Lanjutkan...";
             }
         }
     }
@@ -204,7 +194,7 @@
         });
     }
 
-    // --- ANIMASI BACKGROUND ---
+    // --- ANIMASI LIGHTNING (Tetap) ---
     const canvas = document.getElementById('lightningCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
@@ -218,10 +208,9 @@
             this.path = [{x: this.x, y: 0}];
             this.alpha = Math.random() * 0.5 + 0.3;
             this.finished = false;
-            let curX = this.x; let curY = 0;
+            let curX = this.x, curY = 0;
             while (curY < h) {
-                curX += (Math.random() - 0.5) * 40;
-                curY += Math.random() * 20 + 10;
+                curX += (Math.random() - 0.5) * 40; curY += Math.random() * 20 + 10;
                 this.path.push({x: curX, y: curY});
             }
         }
@@ -236,8 +225,7 @@
     }
     let lightnings = [];
     function animate() {
-        ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
-        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = 'rgba(10, 10, 10, 0.2)'; ctx.fillRect(0, 0, w, h);
         if (Math.random() < 0.04) lightnings.push(new Lightning());
         lightnings.forEach((l, i) => { l.draw(); if (l.finished) lightnings.splice(i, 1); });
         requestAnimationFrame(animate);
