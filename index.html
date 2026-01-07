@@ -3,111 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slot Bomb Tactics - Telegram Ticket</title>
+    <title>Slot Bomb - Lightning Edition</title>
     <style>
         body { 
             font-family: 'Segoe UI', Roboto, sans-serif; 
             text-align: center; 
-            background: #0f0f1b; 
             color: white; 
             margin: 0; padding: 20px;
+            background: #0a0a0a; /* Warna gelap kembali */
+            overflow: hidden;
         }
 
-        /* HEADER & MULTIPLIER */
-        .header { margin-bottom: 20px; }
-        h1 { color: #f1c40f; margin-bottom: 5px; }
-        .multiplier { font-size: 32px; color: #2ecc71; font-weight: bold; margin: 10px 0; }
-        #status { color: #bdc3c7; height: 20px; }
+        #lightningCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
 
-        /* GRID */
-        .grid { display: grid; gap: 8px; justify-content: center; margin: 25px auto; }
+        .header { margin-top: 20px; position: relative; z-index: 1; }
+        h1 { color: #f1c40f; text-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
+        .multiplier { font-size: 42px; color: #2ecc71; font-weight: bold; }
+        
+        /* Gaya Teks Menang */
+        .status-win { 
+            color: #f1c40f !important; 
+            font-size: 24px !important; 
+            font-weight: bold; 
+            text-shadow: 0 0 20px gold;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .grid { 
+            display: grid; gap: 12px; justify-content: center; 
+            margin: 30px auto; position: relative; z-index: 1; 
+        }
         .cell { 
-            width: 60px; height: 60px; background: #23233a; 
+            width: 80px; height: 80px; 
+            background: rgba(30, 30, 50, 0.9);
             display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; cursor: pointer; border-radius: 10px; border: 1px solid #34495e;
+            font-size: 32px; cursor: pointer; border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            backdrop-filter: blur(5px);
             transition: 0.2s;
         }
-        .cell.open { cursor: default; }
-        .cell.safe { background: #2ecc71 !important; border-color: #27ae60; }
-        .cell.bomb { background: #ff4d4d !important; border-color: #b33939; }
+        .cell.safe { background: rgba(46, 204, 113, 0.8) !important; box-shadow: 0 0 15px #2ecc71; }
+        .cell.bomb { background: rgba(231, 76, 60, 0.8) !important; box-shadow: 0 0 15px #e74c3c; }
 
-        /* OVERLAY TIKET */
+        .controls { margin-top: 30px; position: relative; z-index: 1; min-height: 80px;}
+        .btn-end { 
+            display: none; padding: 15px 40px; font-size: 18px; font-weight: bold; 
+            text-decoration: none; border-radius: 50px; color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .btn-claim { background: linear-gradient(180deg, #f1c40f, #e67e22); color: black; }
+        .btn-back { background: #34495e; }
+
         #ticketOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 20, 0.98);
+            background: rgba(0, 0, 0, 0.95);
             display: flex; align-items: center; justify-content: center; z-index: 9999;
         }
-        .ticket-box { background: #1a1a2e; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; width: 80%; max-width: 300px; }
-        .ticket-box input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #34495e; background: #0f0f1b; color: #f1c40f; font-size: 18px; text-align: center; box-sizing: border-box; }
-
-        /* TOMBOL AKHIR */
-        .controls { margin-top: 30px; min-height: 80px; }
-        .btn-end { 
-            display: none; padding: 15px 35px; font-size: 18px; font-weight: bold; 
-            text-decoration: none; border-radius: 50px; color: white; transition: 0.3s;
-            animation: pulse 1.5s infinite;
-        }
-        .btn-claim { background: linear-gradient(180deg, #f1c40f, #e67e22); box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4); }
-        .btn-back { background: linear-gradient(180deg, #7f8c8d, #34495e); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .reset-text { display: block; margin-top: 20px; color: #555; cursor: pointer; font-size: 12px; }
+        .ticket-box { background: #1a1a1a; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; width: 280px; }
+        .ticket-box input { width: 90%; padding: 10px; margin: 15px 0; border-radius: 5px; text-align: center; font-size: 16px; }
     </style>
 </head>
 <body>
 
+    <canvas id="lightningCanvas"></canvas>
+
     <div id="ticketOverlay">
         <div class="ticket-box">
-            <h2>🎟️ AKSES TIKET</h2>
-            <input type="text" id="ticketInput" placeholder="MASUKKAN KODE">
-            <button onclick="verifyTicket()" style="width:100%; padding:12px; background:#f1c40f; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">MULAI MAIN</button>
-            <p id="ticketError" style="color:#ff4d4d; display:none; font-size:12px; margin-top:10px;">Tiket Salah!</p>
+            <h2>🎟️ KODE TIKET</h2>
+            <input type="text" id="ticketInput" placeholder="Ketik Kode Di Sini">
+            <button onclick="verifyTicket()" style="width:100%; padding:12px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">MASUK GAME</button>
+            <p id="ticketError" style="color:#ff4d4d; display:none; margin-top:10px; font-size: 14px;"></p>
         </div>
     </div>
 
     <div class="header">
         <h1>💎 SLOT BOMB 💣</h1>
         <div class="multiplier" id="multiDisplay">x1.00</div>
-        <p id="status">Cari Diamond untuk Klaim Hadiah!</p>
+        <p id="status">Masukkan Tiket Untuk Mulai</p>
     </div>
 
     <div class="grid" id="grid"></div>
 
     <div class="controls">
-        <a href="https://t.me/saranggenz" id="btnWin" class="btn-end btn-claim">KLAIM HADIAH</a>
-        
-        <a href="https://t.me/RuangTemukuu" id="btnLose" class="btn-end btn-back">KEMBALI</a>
-
-        <span class="reset-text" onclick="location.reload()">Reset Sesi Tiket</span>
+        <a href="https://t.me/Link_Klaim" id="btnWin" class="btn-end btn-claim">KLAIM HADIAH</a>
+        <a href="https://t.me/Link_Kembali" id="btnLose" class="btn-end btn-back">KEMBALI</a>
+        <p onclick="location.reload()" style="cursor:pointer; font-size:11px; margin-top:30px; color:#555;">Reset Sesi</p>
     </div>
 
     <script>
-        // --- KONFIGURASI ---
+        // --- 1. ANIMASI PETIR ---
+        const canvas = document.getElementById('lightningCanvas');
+        const ctx = canvas.getContext('2d');
+        let w, h;
+        function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Lightning {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = 0;
+                this.path = [{x: this.x, y: 0}];
+                this.alpha = Math.random() * 0.5 + 0.3;
+                this.finished = false;
+                let curX = this.x; let curY = 0;
+                while (curY < h) {
+                    curX += (Math.random() - 0.5) * 40;
+                    curY += Math.random() * 20 + 10;
+                    this.path.push({x: curX, y: curY});
+                }
+            }
+            draw() {
+                ctx.strokeStyle = `rgba(180, 220, 255, ${this.alpha})`;
+                ctx.lineWidth = 2; ctx.beginPath();
+                ctx.moveTo(this.path[0].x, this.path[0].y);
+                for (let i = 1; i < this.path.length; i++) ctx.lineTo(this.path[i].x, this.path[i].y);
+                ctx.stroke();
+                this.alpha -= 0.04;
+                if (this.alpha <= 0) this.finished = true;
+            }
+        }
+
+        let lightnings = [];
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
+            ctx.fillRect(0, 0, w, h);
+            if (Math.random() < 0.04) lightnings.push(new Lightning());
+            lightnings.forEach((l, i) => { l.draw(); if (l.finished) lightnings.splice(i, 1); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- 2. LOGIKA TIKET SEKALI PAKAI ---
         const CONFIG = {
-            cols: 3, 
-            rows: 3, 
-            bombs: 1, 
-            validTickets: ["VIP77", "GOLD99"],
-            profitRate: 1.25
+            cols: 3, rows: 3, bombs: 1, 
+            profitRate: 1.25,
+            validTickets: ["SFGBHDSRGA", "SDFKJUH"]
         };
 
+        let usedTickets = JSON.parse(localStorage.getItem('usedTicketsSlot')) || [];
+        let currentTicket = "";
+
+        function verifyTicket() {
+            const input = document.getElementById('ticketInput').value.trim().toUpperCase();
+            const errorEl = document.getElementById('ticketError');
+            
+            if (usedTickets.includes(input)) {
+                errorEl.innerText = "Tiket Sudah Terpakai!";
+                errorEl.style.display = 'block';
+            } else if (CONFIG.validTickets.includes(input)) {
+                currentTicket = input;
+                document.getElementById('ticketOverlay').style.display = 'none';
+                initGame();
+            } else {
+                errorEl.innerText = "Tiket Tidak Valid!";
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // --- 3. LOGIKA GAME ---
         let bombPositions = [];
         let isGameOver = false;
         let scoreMulti = 1.0;
         let revealedCount = 0;
 
-        // VERIFIKASI TIKET
-        function verifyTicket() {
-            const input = document.getElementById('ticketInput').value.trim().toUpperCase();
-            if (CONFIG.validTickets.includes(input)) {
-                document.getElementById('ticketOverlay').style.display = 'none';
-                initGame();
-            } else {
-                document.getElementById('ticketError').style.display = 'block';
-            }
-        }
-
-        // INIT GAME
         function initGame() {
             const gridEl = document.getElementById('grid');
             const total = CONFIG.cols * CONFIG.rows;
@@ -116,7 +187,10 @@
             scoreMulti = 1.0;
             revealedCount = 0;
 
-            gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 60px)`;
+            document.getElementById('status').innerText = "Cari Diamond!";
+            document.getElementById('status').className = ""; 
+            
+            gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 80px)`;
             gridEl.innerHTML = '';
 
             while(bombPositions.length < CONFIG.bombs) {
@@ -132,32 +206,52 @@
             }
         }
 
-        // LOGIKA KLIK
         function handleTap(idx, el) {
             if (isGameOver || el.classList.contains('open')) return;
             el.classList.add('open');
             
             if (bombPositions.includes(idx)) {
-                // HASIL: GAGAL (Tampilkan tombol KEMBALI)
+                // LOGIKA KALAH
                 isGameOver = true;
                 el.innerText = '💣';
                 el.classList.add('bomb');
                 document.getElementById('status').innerText = "BOOM! Anda Gagal.";
                 document.getElementById('btnLose').style.display = 'inline-block';
+                document.getElementById('btnWin').style.display = 'none'; // Pastikan tombol klaim sembunyi
+                burnTicket(); 
                 revealAll();
             } else {
-                // HASIL: BERHASIL (Tampilkan tombol KLAIM)
+                // LOGIKA BERHASIL MENEBAK
                 revealedCount++;
                 scoreMulti = Math.pow(CONFIG.profitRate, revealedCount);
                 el.innerText = '💎';
                 el.classList.add('safe');
                 document.getElementById('multiDisplay').innerText = `x${scoreMulti.toFixed(2)}`;
-                document.getElementById('status').innerText = "Berhasil! Tekan Klaim atau Lanjut.";
                 
-                // Munculkan tombol Klaim setiap kali berhasil menebak 
-                // (Pemain bisa berhenti kapan saja untuk klaim)
-                document.getElementById('btnWin').style.display = 'inline-block';
-                document.getElementById('btnLose').style.display = 'none';
+                // CEK JIKA SEMUA DIAMOND DITEMUKAN (KONDISI MENANG MUTLAK)
+                const totalSafe = (CONFIG.cols * CONFIG.rows) - CONFIG.bombs;
+                
+                if (revealedCount === totalSafe) {
+                    isGameOver = true;
+                    document.getElementById('status').innerText = "KAMU MENANG!";
+                    document.getElementById('status').classList.add('status-win');
+                    
+                    // TOMBOL KLAIM HANYA MUNCUL DI SINI
+                    document.getElementById('btnWin').style.display = 'inline-block';
+                    
+                    burnTicket();
+                } else {
+                    // Selama permainan berlangsung, tombol klaim tetap sembunyi (display: none)
+                    document.getElementById('status').innerText = "Cari Diamond Berikutnya...";
+                    document.getElementById('btnWin').style.display = 'none'; 
+                }
+            }
+        }
+
+        function burnTicket() {
+            if (currentTicket && !usedTickets.includes(currentTicket)) {
+                usedTickets.push(currentTicket);
+                localStorage.setItem('usedTicketsSlot', JSON.stringify(usedTickets));
             }
         }
 
@@ -167,8 +261,6 @@
                 cells[p].innerText = '💣';
                 cells[p].classList.add('bomb');
             });
-            // Sembunyikan tombol klaim jika ada karena sudah kalah
-            document.getElementById('btnWin').style.display = 'none';
         }
     </script>
 </body>
