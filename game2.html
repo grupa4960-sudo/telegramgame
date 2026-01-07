@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Bomb Tactics - Ticket System</title>
+    <style>
+        /* TAMPILAN UTAMA */
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            text-align: center; 
+            background: #0f0f1b; 
+            color: white; 
+            margin: 0; 
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header { margin-bottom: 20px; }
+        h1 { color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); margin-bottom: 5px; }
+        
+        .multiplier { 
+            font-size: 32px; 
+            color: #2ecc71; 
+            font-weight: bold; 
+            margin: 10px 0; 
+            text-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+        }
+
+        /* GRID PERMAINAN */
+        .grid { 
+            display: grid; 
+            gap: 8px; 
+            justify-content: center; 
+            margin: 25px auto; 
+        }
+
+        .cell { 
+            width: 60px; height: 60px; 
+            background: linear-gradient(145deg, #23233a, #1a1a2e); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; cursor: pointer; border-radius: 10px;
+            border: 1px solid #34495e;
+            transition: all 0.2s ease;
+        }
+        
+        .cell.open { cursor: default; transform: scale(0.95); }
+        .cell.safe { background: radial-gradient(circle, #2ecc71, #27ae60) !important; border-color: #2ecc71; }
+        .cell.bomb { background: radial-gradient(circle, #ff4d4d, #b33939) !important; border-color: #ff6b6b; }
+
+        /* OVERLAY TIKET */
+        #ticketOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 20, 0.95);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+
+        .ticket-box {
+            background: #1a1a2e;
+            padding: 40px 20px;
+            border-radius: 20px;
+            border: 2px solid #f1c40f;
+            width: 85%;
+            max-width: 350px;
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
+        }
+
+        .ticket-box input {
+            width: 100%; padding: 15px; margin: 20px 0;
+            border-radius: 10px; border: 1px solid #34495e;
+            background: #0f0f1b; color: #f1c40f;
+            font-size: 20px; font-weight: bold; text-align: center;
+            box-sizing: border-box; outline: none;
+        }
+
+        /* TOMBOL-TOMBOL */
+        .btn-action {
+            display: inline-block;
+            padding: 15px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            color: #000;
+            background: #f1c40f;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-link-finish {
+            display: none; /* Muncul saat kalah/menang */
+            margin-top: 20px;
+            background: linear-gradient(180deg, #e67e22, #d35400);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .reset-text {
+            display: block; margin-top: 25px; color: #7f8c8d;
+            cursor: pointer; font-size: 14px; text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ticketOverlay">
+        <div class="ticket-box">
+            <h1>🎟️ TICKET</h1>
+            <p style="color: #bdc3c7;">Masukkan kode akses untuk bermain</p>
+            <input type="text" id="ticketInput" placeholder="KODE TIKET">
+            <button class="btn-action" onclick="verifyTicket()">VERIFIKASI</button>
+            <p id="ticketError" style="color: #ff4d4d; margin-top: 15px; display: none;">Kode Tiket Tidak Valid!</p>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>💎 BOMB TACTICS 💣</h1>
+        <div class="multiplier" id="multiDisplay">x1.00</div>
+        <p id="status">Pilih kotak dan kumpulkan Diamond!</p>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="controls">
+        <a href="https://t.me/GrupAnda" id="finishBtn" class="btn-action btn-link-finish">KLAIM HADIAH</a>
+        <span class="reset-text" onclick="location.reload()">Input Tiket Baru</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. PENGATURAN (Sesuai Kebutuhan Anda)
+        // ==========================================
+        const CONFIG = {
+            cols: 3,               // Kolom ke samping
+            rows: 3,               // Baris ke bawah
+            bombs: 1,              // Jumlah bom tersembunyi
+            safeIcon: '🎰',        // Simbol Slot Menang
+            bombIcon: '☠️',        // Simbol Bom
+            profitRate: 1.20,      // Kenaikan Multiplier (1.20 = +20% per klik)
+            validTickets: ["VIP77", "MAIN123", "TICKET01"] // Daftar Tiket Anda
+        };
+
+        // ==========================================
+        // 2. LOGIKA SISTEM TIKET
+        // ==========================================
+        function verifyTicket() {
+            const input = document.getElementById('ticketInput').value.trim().toUpperCase();
+            const error = document.getElementById('ticketError');
+            const overlay = document.getElementById('ticketOverlay');
+
+            if (CONFIG.validTickets.includes(input)) {
+                overlay.style.display = 'none'; // Buka akses game
+                initGame();
+            } else {
+                error.style.display = 'block';
+                document.getElementById('ticketInput').value = '';
+            }
+        }
+
+        // ==========================================
+        // 3. LOGIKA INTI PERMAINAN
+        // ==========================================
+        let bombPositions = [];
+        let isGameOver = false;
+        let scoreMulti = 1.0;
+        let revealedCount = 0;
+
+        function initGame() {
+            const gridEl = document.getElementById('grid');
+            const totalCells = CONFIG.cols * CONFIG.rows;
+            
+            // Reset state
+            bombPositions = [];
+            isGameOver = false;
+            scoreMulti = 1.0;
+            revealedCount = 0;
+
+            // Atur Grid
+            gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 60px)`;
+            gridEl.innerHTML = '';
+
+            // Tanam Bom
+            while(bombPositions.length < CONFIG.bombs) {
+                let r = Math.floor(Math.random() * totalCells);
+                if(!bombPositions.includes(r)) bombPositions.push(r);
+            }
+
+            // Buat Kotak
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.onclick = () => handleTap(i, cell);
+                gridEl.appendChild(cell);
+            }
+        }
+
+        function handleTap(idx, el) {
+            if (isGameOver || el.classList.contains('open')) return;
+
+            el.classList.add('open');
+            
+            if (bombPositions.includes(idx)) {
+                endGame(false, el);
+            } else {
+                revealedCount++;
+                scoreMulti = Math.pow(CONFIG.profitRate, revealedCount);
+                el.innerText = CONFIG.safeIcon;
+                el.classList.add('safe');
+                updateUI();
+                
+                // Cek jika menang semua
+                if (revealedCount === (CONFIG.cols * CONFIG.rows) - CONFIG.bombs) {
+                    endGame(true, el);
+                }
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('multiDisplay').innerText = `x${scoreMulti.toFixed(2)}`;
+            document.getElementById('status').innerText = "Mantap! Lanjutkan?";
+        }
+
+        function endGame(isWin, lastEl) {
+            isGameOver = true;
+            document.getElementById('finishBtn').style.display = 'inline-block';
+
+            if (!isWin) {
+                lastEl.innerText = CONFIG.bombIcon;
+                lastEl.classList.add('bomb');
+                document.getElementById('status').innerText = "BOOM! Game Over.";
+                revealAll();
+            } else {
+                document.getElementById('status').innerText = "JACKPOT! Diamond Ditemukan.";
+            }
+        }
+
+        function revealAll() {
+            const cells = document.querySelectorAll('.cell');
+            bombPositions.forEach(p => {
+                cells[p].innerText = CONFIG.bombIcon;
+                cells[p].classList.add('bomb');
+            });
+        }
+    </script>
+</body>
+</html>
