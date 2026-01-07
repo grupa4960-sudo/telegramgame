@@ -11,28 +11,32 @@
             background: #0a0a0a; overflow: hidden;
         }
         #lightningCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-        .header { margin-top: 20px; position: relative; z-index: 1; }
-        h1 { color: #f1c40f; text-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
+        .header { margin-top: 10px; position: relative; z-index: 1; }
+        h1 { color: #f1c40f; text-shadow: 0 0 15px rgba(241, 196, 15, 0.4); margin-bottom: 5px; }
         .multiplier { font-size: 42px; color: #2ecc71; font-weight: bold; }
-        .status-win { color: #f1c40f !important; font-size: 24px !important; font-weight: bold; text-shadow: 0 0 20px gold; animation: pulse 1s infinite; }
+        .status-win { color: #f1c40f !important; font-size: 24px !important; text-shadow: 0 0 20px gold; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .grid { display: grid; gap: 12px; justify-content: center; margin: 30px auto; position: relative; z-index: 1; }
+        
+        .grid { display: grid; gap: 10px; justify-content: center; margin: 20px auto; position: relative; z-index: 1; }
         .cell { 
-            width: 80px; height: 80px; background: rgba(30, 30, 50, 0.9);
+            width: 75px; height: 75px; background: rgba(30, 30, 50, 0.9);
             display: flex; align-items: center; justify-content: center; 
-            font-size: 32px; cursor: pointer; border-radius: 12px; 
+            font-size: 30px; cursor: pointer; border-radius: 12px; 
             border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); transition: 0.2s;
         }
         .cell.open { cursor: default; }
         .cell.safe { background: rgba(46, 204, 113, 0.8) !important; box-shadow: 0 0 15px #2ecc71; }
         .cell.bomb { background: rgba(231, 76, 60, 0.8) !important; box-shadow: 0 0 15px #e74c3c; }
-        .controls { margin-top: 30px; position: relative; z-index: 1; min-height: 80px;}
+        
+        .controls { margin-top: 20px; position: relative; z-index: 1; min-height: 80px;}
         .btn-end { display: none; padding: 15px 40px; font-size: 18px; font-weight: bold; text-decoration: none; border-radius: 50px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .btn-claim { background: linear-gradient(180deg, #f1c40f, #e67e22); color: black; }
         .btn-back { background: #34495e; }
+
         #ticketOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .ticket-box { background: #1a1a1a; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; width: 280px; }
-        .ticket-box input { width: 90%; padding: 10px; margin: 15px 0; border-radius: 5px; text-align: center; font-size: 16px; color: black; }
+        .ticket-box { background: #1a1a1a; padding: 30px; border-radius: 20px; border: 2px solid #f1c40f; width: 280px; box-shadow: 0 0 30px rgba(241, 196, 15, 0.2); }
+        .ticket-box h2 { margin-top: 0; font-size: 20px; }
+        .ticket-box input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 8px; text-align: center; font-size: 16px; border: 1px solid #333; }
     </style>
 </head>
 <body>
@@ -41,17 +45,18 @@
 
 <div id="ticketOverlay">
     <div class="ticket-box">
-        <h2>🎟️ KODE TIKET</h2>
-        <input type="text" id="ticketInput" placeholder="Ketik Kode Di Sini">
-        <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:12px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">MASUK GAME</button>
-        <p id="ticketError" style="color:#ff4d4d; display:none; margin-top:10px; font-size: 14px;"></p>
+        <h2>🎟️ MASUKKAN DATA</h2>
+        <input type="text" id="userNameInput" placeholder="Nama Anda">
+        <input type="text" id="ticketInput" placeholder="Kode Tiket">
+        <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:14px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-top:10px;">MULAI BERMAIN</button>
+        <p id="ticketError" style="color:#ff4d4d; display:none; margin-top:12px; font-size: 14px; font-weight: bold;"></p>
     </div>
 </div>
 
 <div class="header">
     <h1>💎 SLOT BOMB 💣</h1>
     <div class="multiplier" id="multiDisplay">x1.00</div>
-    <p id="status">Masukkan Tiket Untuk Mulai</p>
+    <p id="status">Lengkapi data untuk memulai</p>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -59,65 +64,24 @@
 <div class="controls">
     <a href="https://t.me/Link_Klaim" id="btnWin" class="btn-end btn-claim">KLAIM HADIAH</a>
     <a href="https://t.me/Link_Kembali" id="btnLose" class="btn-end btn-back">KEMBALI</a>
-    <p onclick="location.reload()" style="cursor:pointer; font-size:11px; margin-top:30px; color:#555;">Reset Sesi</p>
+    <p onclick="location.reload()" style="cursor:pointer; font-size:11px; margin-top:30px; color:#555; text-decoration: underline;">Reset Sesi</p>
 </div>
 
 <script>
     const CONFIG = {
         cols: 3, rows: 3, bombs: 1, profitRate: 1.25,
-        scriptUrl: "https://script.google.com/macros/s/AKfycbwdB7mcknurYJzG1sBjk2NZoAru4Mo665T9LD9W3YDavDbuAj4susScxZfm0Q6b2r4z/exec", 
+        scriptUrl: "https://script.google.com/macros/s/AKfycbx6xRZ0u121y7r5V9gmFt5UaAEZXh3NfgpKN_nsKefzdfqI_4ABbaBKsI5W-lHzyXJQEQ/exec", 
         sheetNameTarget: "KODE TIKET 6" 
     };
 
-    // --- 1. ANIMASI PETIR ---
-    const canvas = document.getElementById('lightningCanvas');
-    const ctx = canvas.getContext('2d');
-    let w, h;
-    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
-
-    class Lightning {
-        constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * w; this.y = 0;
-            this.path = [{x: this.x, y: 0}];
-            this.alpha = Math.random() * 0.5 + 0.3;
-            this.finished = false;
-            let curX = this.x; let curY = 0;
-            while (curY < h) {
-                curX += (Math.random() - 0.5) * 40;
-                curY += Math.random() * 20 + 10;
-                this.path.push({x: curX, y: curY});
-            }
-        }
-        draw() {
-            ctx.strokeStyle = `rgba(180, 220, 255, ${this.alpha})`;
-            ctx.lineWidth = 2; ctx.beginPath();
-            ctx.moveTo(this.path[0].x, this.path[0].y);
-            for (let i = 1; i < this.path.length; i++) ctx.lineTo(this.path[i].x, this.path[i].y);
-            ctx.stroke();
-            this.alpha -= 0.04; if (this.alpha <= 0) this.finished = true;
-        }
-    }
-
-    let lightnings = [];
-    function animate() {
-        ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
-        ctx.fillRect(0, 0, w, h);
-        if (Math.random() < 0.04) lightnings.push(new Lightning());
-        lightnings.forEach((l, i) => { l.draw(); if (l.finished) lightnings.splice(i, 1); });
-        requestAnimationFrame(animate);
-    }
-    animate();
-
-    // --- 2. LOGIKA TIKET & DATA ---
     let currentTicket = "";
+    let currentName = "";
     let bombPositions = [];
     let isGameOver = false;
     let scoreMulti = 1.0;
     let revealedCount = 0;
 
+    // --- UTILS ---
     async function getIp() {
         try {
             const res = await fetch('https://api.ipify.org?format=json');
@@ -126,19 +90,27 @@
         } catch (e) { return "IP Hidden"; }
     }
 
+    // --- LOGIKA TIKET ---
     async function verifyTicket() {
-        const input = document.getElementById('ticketInput').value.trim();
+        const nameIn = document.getElementById('userNameInput').value.trim();
+        const ticketIn = document.getElementById('ticketInput').value.trim();
         const errorEl = document.getElementById('ticketError');
         const btn = document.getElementById('btnVerify');
-        if (!input) return;
+
+        if (!nameIn || !ticketIn) {
+            errorEl.innerText = "Isi NAMA dan TIKET!";
+            errorEl.style.display = 'block';
+            return;
+        }
 
         btn.disabled = true;
-        btn.innerText = "MENGECEK...";
-        currentTicket = input;
+        btn.innerText = "VERIFIKASI...";
+        currentTicket = ticketIn;
+        currentName = nameIn;
         const userIp = await getIp();
 
         try {
-            const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(input)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&action=verify&ip=${userIp}`;
+            const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(ticketIn)}&userName=${encodeURIComponent(nameIn)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&action=verify&ip=${userIp}`;
             const response = await fetch(url);
             const result = await response.text();
 
@@ -146,13 +118,13 @@
                 document.getElementById('ticketOverlay').style.display = 'none';
                 initGame();
             } else {
-                errorEl.innerText = result === "USED" ? "TIKET SUDAH DIPAKAI!" : "TIKET TIDAK VALID!";
+                errorEl.innerText = result === "USED" ? "TIKET SUDAH PERNAH DIPAKAI!" : "TIKET TIDAK VALID!";
                 errorEl.style.display = 'block';
                 btn.disabled = false;
-                btn.innerText = "MASUK GAME";
+                btn.innerText = "MULAI BERMAIN";
             }
         } catch (e) { 
-            errorEl.innerText = "KONEKSI GAGAL!"; 
+            errorEl.innerText = "KONEKSI SERVER GAGAL!"; 
             errorEl.style.display = 'block';
             btn.disabled = false;
         }
@@ -160,24 +132,23 @@
 
     async function updateGameResult(status) {
         const userIp = await getIp();
-        const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(currentTicket)}&action=${status}&ip=${userIp}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}`;
-        // Menggunakan fetch dengan keepalive agar data tetap terkirim meski tab ditutup
+        const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(currentTicket)}&userName=${encodeURIComponent(currentName)}&action=${status}&ip=${userIp}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}`;
+        // Menggunakan keepalive agar data tetap terkirim meskipun browser ditutup mendadak
         await fetch(url, { mode: 'no-cors', keepalive: true });
     }
 
-    // --- 3. LOGIKA GAME ---
+    // --- LOGIKA GAME ---
     function initGame() {
         const gridEl = document.getElementById('grid');
         const total = CONFIG.cols * CONFIG.rows;
         bombPositions = []; isGameOver = false; scoreMulti = 1.0; revealedCount = 0;
 
         document.getElementById('status').innerText = "Cari Diamond!";
-        document.getElementById('status').classList.remove('status-win');
         document.getElementById('multiDisplay').innerText = "x1.00";
         document.getElementById('btnWin').style.display = 'none';
         document.getElementById('btnLose').style.display = 'none';
         
-        gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 80px)`;
+        gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 75px)`;
         gridEl.innerHTML = '';
 
         while(bombPositions.length < CONFIG.bombs) {
@@ -201,7 +172,7 @@
             isGameOver = true;
             el.innerText = '💣';
             el.classList.add('bomb');
-            document.getElementById('status').innerText = "BOOM! Anda Gagal.";
+            document.getElementById('status').innerText = "BOOM! GAME OVER";
             document.getElementById('btnLose').style.display = 'inline-block';
             revealAll();
             await updateGameResult("lose");
@@ -215,12 +186,12 @@
             const totalSafe = (CONFIG.cols * CONFIG.rows) - CONFIG.bombs;
             if (revealedCount === totalSafe) {
                 isGameOver = true;
-                document.getElementById('status').innerText = "KAMU MENANG!";
+                document.getElementById('status').innerText = "YOU WIN!";
                 document.getElementById('status').classList.add('status-win');
                 document.getElementById('btnWin').style.display = 'inline-block';
                 await updateGameResult("win");
             } else {
-                document.getElementById('status').innerText = "Cari Diamond Berikutnya...";
+                document.getElementById('status').innerText = "Mantap! Lanjutkan...";
             }
         }
     }
@@ -232,6 +203,46 @@
             cells[p].classList.add('bomb');
         });
     }
+
+    // --- ANIMASI BACKGROUND ---
+    const canvas = document.getElementById('lightningCanvas');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    resize();
+    class Lightning {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * w; this.y = 0;
+            this.path = [{x: this.x, y: 0}];
+            this.alpha = Math.random() * 0.5 + 0.3;
+            this.finished = false;
+            let curX = this.x; let curY = 0;
+            while (curY < h) {
+                curX += (Math.random() - 0.5) * 40;
+                curY += Math.random() * 20 + 10;
+                this.path.push({x: curX, y: curY});
+            }
+        }
+        draw() {
+            ctx.strokeStyle = `rgba(180, 220, 255, ${this.alpha})`;
+            ctx.lineWidth = 2; ctx.beginPath();
+            ctx.moveTo(this.path[0].x, this.path[0].y);
+            for (let i = 1; i < this.path.length; i++) ctx.lineTo(this.path[i].x, this.path[i].y);
+            ctx.stroke();
+            this.alpha -= 0.04; if (this.alpha <= 0) this.finished = true;
+        }
+    }
+    let lightnings = [];
+    function animate() {
+        ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
+        ctx.fillRect(0, 0, w, h);
+        if (Math.random() < 0.04) lightnings.push(new Lightning());
+        lightnings.forEach((l, i) => { l.draw(); if (l.finished) lightnings.splice(i, 1); });
+        requestAnimationFrame(animate);
+    }
+    animate();
 </script>
 </body>
 </html>
