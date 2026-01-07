@@ -81,7 +81,7 @@
     </div>
 
     <div class="header">
-        <h1>💎 SLOT BOMB 💣</h1>
+        <h1>🎰 SLOT BOMB ☠️</h1>
         <div class="multiplier" id="multiDisplay">x1.00</div>
         <p id="status">Masukkan Tiket Untuk Mulai</p>
     </div>
@@ -226,7 +226,7 @@
         
         if (bombPositions.includes(idx)) {
             isGameOver = true;
-            el.innerText = '💣';
+            el.innerText = '☠️';
             el.classList.add('bomb');
             document.getElementById('status').innerText = "BOOM! Anda Gagal.";
             document.getElementById('btnLose').style.display = 'inline-block';
@@ -234,7 +234,7 @@
         } else {
             revealedCount++;
             scoreMulti = Math.pow(CONFIG.profitRate, revealedCount);
-            el.innerText = '💎';
+            el.innerText = '🎰';
             el.classList.add('safe');
             document.getElementById('multiDisplay').innerText = `x${scoreMulti.toFixed(2)}`;
             
@@ -253,10 +253,11 @@
     function revealAll() {
         const cells = document.querySelectorAll('.cell');
         bombPositions.forEach(p => {
-            cells[p].innerText = '💣';
+            cells[p].innerText = '☠️';
             cells[p].classList.add('bomb');
         });
     }
 </script>
 </body>
 </html>
+
