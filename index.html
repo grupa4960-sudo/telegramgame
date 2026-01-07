@@ -23,18 +23,14 @@
             display: flex; align-items: center; justify-content: center; 
             font-size: 30px; cursor: pointer; border-radius: 12px; 
             border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); transition: 0.2s;
-            position: relative;
-        }
-        /* Menampilkan nomor kecil di pojok sebagai panduan admin */
-        .cell::after {
-            content: attr(data-index);
-            position: absolute; top: 5px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.2);
         }
         .cell.open { cursor: default; }
         .cell.safe { background: rgba(46, 204, 113, 0.8) !important; box-shadow: 0 0 15px #2ecc71; }
         .cell.bomb { background: rgba(231, 76, 60, 0.8) !important; box-shadow: 0 0 15px #e74c3c; }
         
         .controls { margin-top: 20px; position: relative; z-index: 1; min-height: 80px;}
+        
+        /* WARNA TOMBOL KEMBALI SEPERTI SEBELUMNYA */
         .btn-end { display: none; padding: 15px 40px; font-size: 18px; font-weight: bold; text-decoration: none; border-radius: 50px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .btn-claim { background: linear-gradient(180deg, #f1c40f, #e67e22); color: black; }
         .btn-back { background: #34495e; }
@@ -50,16 +46,16 @@
 
 <div id="ticketOverlay">
     <div class="ticket-box">
-        <h2 style="color: #f1c40f;">🎟️ LOGIN PLAYER</h2>
-        <input type="text" id="userNameInput" placeholder="Masukkan Nama">
-        <input type="text" id="ticketInput" placeholder="Masukkan Kode Tiket">
-        <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:14px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-top:10px; color: black;">MULAI MAIN</button>
+        <h2 style="color: #f1c40f;">🎟️ MASUKKAN DATA</h2>
+        <input type="text" id="userNameInput" placeholder="Nama Anda">
+        <input type="text" id="ticketInput" placeholder="Kode Tiket">
+        <button id="btnVerify" onclick="verifyTicket()" style="width:100%; padding:14px; background:#f1c40f; font-weight:bold; border:none; border-radius:8px; cursor:pointer; margin-top:10px; color: black;">MULAI BERMAIN</button>
         <p id="ticketError" style="color:#ff4d4d; display:none; margin-top:12px; font-size: 14px; font-weight: bold;"></p>
     </div>
 </div>
 
 <div class="header">
-    <h1>🐉 SLOT BOMB 💣</h1>
+    <h1>💎 SLOT BOMB 💣</h1>
     <div class="multiplier" id="multiDisplay">x1.00</div>
     <p id="status">Cari Diamond!</p>
 </div>
@@ -75,8 +71,7 @@
 <script>
     const CONFIG = {
         cols: 3, rows: 3, bombsCount: 1, profitRate: 1.25,
-        // MASUKKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI
-        scriptUrl: "https://script.google.com/macros/s/AKfycbzncmHnLw90icjI2_wuUqIqbhomnC9oIQAILbjOPIq03HfbNnuNNde8JEtcYg5Z0WvAgw/exec", 
+        scriptUrl: "https://script.google.com/macros/s/AKfycbyOKb-C7vHKwmJ0qQXCecOlwI_0m7ukoDxkWPDnWn632QySzr88kKguMaoj3FvIYQFREw/exec", 
         sheetNameTarget: "KODE TIKET 6" 
     };
 
@@ -97,39 +92,39 @@
         const btn = document.getElementById('btnVerify');
 
         if (!nameIn || !ticketIn) {
-            errorEl.innerText = "Data tidak lengkap!";
+            errorEl.innerText = "Isi NAMA dan TIKET!";
             errorEl.style.display = 'block';
             return;
         }
 
-        btn.disabled = true; btn.innerText = "MENGECEK...";
+        btn.disabled = true; btn.innerText = "VERIFIKASI...";
         currentTicket = ticketIn; currentName = nameIn;
         const userIp = await getIp();
 
         try {
             const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(ticketIn)}&userName=${encodeURIComponent(nameIn)}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&action=verify&ip=${userIp}`;
-            const res = await fetch(url);
-            const result = await res.text();
+            const response = await fetch(url);
+            const result = await response.text();
 
             if (result.trim() === "VALID") {
                 document.getElementById('ticketOverlay').style.display = 'none';
                 initGame();
             } else {
-                errorEl.innerText = result === "USED" ? "TIKET SUDAH DIGUNAKAN!" : "TIKET TIDAK TERDAFTAR!";
+                errorEl.innerText = result === "USED" ? "TIKET SUDAH PERNAH DIPAKAI!" : "TIKET TIDAK VALID!";
                 errorEl.style.display = 'block';
-                btn.disabled = false; btn.innerText = "MULAI MAIN";
+                btn.disabled = false; btn.innerText = "MULAI BERMAIN";
             }
         } catch (e) { 
-            errorEl.innerText = "ERROR KONEKSI!"; errorEl.style.display = 'block';
+            errorEl.innerText = "KONEKSI SERVER GAGAL!"; 
+            errorEl.style.display = 'block';
             btn.disabled = false;
         }
     }
 
     async function updateGameResult(status) {
         const userIp = await getIp();
-        // Logika Lokasi Bom (1-9) sesuai permintaan
         const bombLocs = bombPositions.map(p => p + 1).join(", ");
-        const reportLabel = `kolom nomor ${bombLocs}`;
+        const reportLabel = `Bom di kolom nomor ${bombLocs}`;
         
         const url = `${CONFIG.scriptUrl}?ticket=${encodeURIComponent(currentTicket)}&userName=${encodeURIComponent(currentName)}&action=${status}&ip=${userIp}&sheetName=${encodeURIComponent(CONFIG.sheetNameTarget)}&bombs=${encodeURIComponent(reportLabel)}`;
         
@@ -140,6 +135,11 @@
         const gridEl = document.getElementById('grid');
         const total = CONFIG.cols * CONFIG.rows;
         bombPositions = []; isGameOver = false; revealedCount = 0;
+
+        document.getElementById('status').innerText = "Cari Diamond!";
+        document.getElementById('multiDisplay').innerText = "x1.00";
+        document.getElementById('btnWin').style.display = 'none';
+        document.getElementById('btnLose').style.display = 'none';
         
         gridEl.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 75px)`;
         gridEl.innerHTML = '';
@@ -152,7 +152,6 @@
         for (let i = 0; i < total; i++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
-            cell.setAttribute('data-index', i + 1); // Penomoran 1-9
             cell.onclick = () => handleTap(i, cell);
             gridEl.appendChild(cell);
         }
@@ -165,14 +164,14 @@
         if (bombPositions.includes(idx)) {
             isGameOver = true;
             el.innerText = '💣'; el.classList.add('bomb');
-            document.getElementById('status').innerText = "BOOM! ANDA KALAH";
+            document.getElementById('status').innerText = "BOOM! GAME OVER";
             document.getElementById('btnLose').style.display = 'inline-block';
             revealAll();
             await updateGameResult("lose");
         } else {
             revealedCount++;
             let multi = Math.pow(CONFIG.profitRate, revealedCount);
-            el.innerText = '🐉'; el.classList.add('safe');
+            el.innerText = '💎'; el.classList.add('safe');
             document.getElementById('multiDisplay').innerText = `x${multi.toFixed(2)}`;
             
             const totalSafe = (CONFIG.cols * CONFIG.rows) - CONFIG.bombsCount;
@@ -194,7 +193,7 @@
         });
     }
 
-    // --- ANIMASI LIGHTNING (Tetap) ---
+    // --- ANIMASI BACKGROUND (Lightning) ---
     const canvas = document.getElementById('lightningCanvas');
     const ctx = canvas.getContext('2d');
     let w, h;
@@ -234,4 +233,3 @@
 </script>
 </body>
 </html>
-
